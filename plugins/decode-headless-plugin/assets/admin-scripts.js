@@ -1,12 +1,12 @@
 jQuery(document).ready(function($) {
     
     /**
-     * GESTION DE LA CONNEXION (Point 1 du sujet)
+     * 1. GESTION DE LA CONNEXION (Point 1 du sujet)
+     * Envoi asynchrone des identifiants vers WordPress via AJAX
      */
     $('#headless-login-form').on('submit', function(e) {
         e.preventDefault();
         
-        // Préparation des données à envoyer
         const data = {
             action: 'headless_login_action',
             security: decode_headless_obj.nonce,
@@ -15,22 +15,19 @@ jQuery(document).ready(function($) {
             secret: $('#headless_secret').val()
         };
 
-        // Feedback visuel immédiat
         $('#login-response-message')
-            .text('Tentative de connexion en cours...')
+            .text('Tentative de connexion...')
             .css('color', '#666');
 
-        // Envoi de la requête POST asynchrone
         $.post(decode_headless_obj.ajax_url, data, function(response) {
             if (response.success) {
-                // Succès : affichage du message et mise à jour du champ Token
                 $('#login-response-message')
                     .css('color', 'green')
                     .text(response.data.message);
                 
+                // Mise à jour du champ token en lecture seule
                 $('#headless_token').val(response.data.token);
             } else {
-                // Erreur : affichage du message d'erreur
                 $('#login-response-message')
                     .css('color', 'red')
                     .text(response.data.message);
@@ -39,7 +36,8 @@ jQuery(document).ready(function($) {
     });
 
     /**
-     * GESTION DE LA DÉCONNEXION (Point 1 du sujet)
+     * 2. GESTION DE LA DÉCONNEXION (Point 1 du sujet)
+     * Supprime le token côté serveur et vide l'interface
      */
     $('#headless-logout').on('click', function(e) {
         e.preventDefault();
@@ -51,13 +49,37 @@ jQuery(document).ready(function($) {
 
         $.post(decode_headless_obj.ajax_url, data, function(response) {
             if (response.success) {
-                // Réinitialisation de l'interface
+                // Réinitialisation des champs
                 $('#headless_token').val('');
                 $('#headless_login, #headless_password, #headless_secret').val('');
                 
                 $('#login-response-message')
                     .css('color', '#2271b1')
                     .text(response.data.message);
+            }
+        });
+    });
+
+    /**
+     * 3. VIDER LE CACHE (Point 4 Bonus)
+     * Supprime le Transient WordPress pour forcer une nouvelle requête API
+     */
+    $('#clear-cache-btn').on('click', function(e) {
+        e.preventDefault();
+        const $btn = $(this);
+        
+        $btn.text('Nettoyage...').prop('disabled', true);
+
+        const data = {
+            action: 'headless_clear_cache',
+            security: decode_headless_obj.nonce
+        };
+
+        $.post(decode_headless_obj.ajax_url, data, function(response) {
+            if (response.success) {
+                alert(response.data.message);
+                // Rechargement de la page pour rafraîchir le tableau des données
+                location.reload();
             }
         });
     });
